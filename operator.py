@@ -166,14 +166,13 @@ for event in w.stream(custom_objects_api_instance.list_cluster_custom_object, fq
         finalizers = []
     api_version = event['object']['apiVersion']
     event_type = event['type']
-    # print("Event: {} {} named {} in {}".format(event['type'], event['object']['kind'], event['object']['metadata']['name'], event['object']['metadata']['namespace']))
     if event_type in ["ADDED", "MODIFIED"]:
         spec = event['object']['spec']
         subprocess_env = dict([("_DOLLAR", "$")] + parse(event['object'], prefix="K8S"))
-        # subprocess_env = {"K8S_METADATA_NAMESPACE": namespace, "K8S_METADATA_NAME": name, "K8S_SPEC_MASTER_REPLICAS": str(spec['master']['replicas'])}
         if deletion_timestamp is not None:
             if "OldSchoolGC" in finalizers:
                 try:
+                    print("running delete.sh")
                     subprocess.check_call(["/bin/bash", "delete.sh"], env=dict(list(os.environ.items()) + list(subprocess_env.items())))
                 except kubernetes.client.rest.ApiException as e:
                     if e.status != 404:
@@ -185,11 +184,12 @@ for event in w.stream(custom_objects_api_instance.list_cluster_custom_object, fq
             if "OldSchoolGC" not in finalizers:
                 custom_objects_api_instance.update_namespaced_custom_object(fqdn, version, namespace, resource, name, {"metadata": {"finalizers": ["OldSchoolGC"]}, "kind": kind, "apiVersion": api_version, "name": name})
             else:
-                # subprocess.check_call(["/bin/bash", "apply.sh"], env=dict(list(os.environ.items()) + list(subprocess_env.items())))
+                print("running apply.sh")
                 process = subprocess.Popen(["/bin/bash", "apply.sh"], env=dict(list(os.environ.items()) + list(subprocess_env.items())), stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1)
                 out, err = process.communicate()
+                print("out: {}".format(out))
+                print("error:")
+                print(err.decode('utf-8'))
+                assert process.returncode == 0
                 status = yaml.load(out)
-                # custom_objects_api_instance.update_namespaced_custom_object(fqdn, version, namespace, resource, name, {"kind": kind, "apiVersion": api_version, "name": name, "status": status})
                 custom_objects_api_instance.update_namespaced_custom_object(fqdn, version, namespace, resource, name, {"status": status})
-                print("out yo: {}".format(out))
-                print("error yo: {}".format(err))
