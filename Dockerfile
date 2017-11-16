@@ -1,8 +1,7 @@
 FROM python:3.6
 
-COPY requirements.txt /tmp/
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir git+https://github.com/side8/k8s-operator@master
 
-COPY apply.sh delete.sh operator.py ./
+COPY apply delete ./
 
-ENTRYPOINT ["python", "operator.py"]
+ENTRYPOINT ["side8-operator", "--resource", "elasticsearchs", "--fqdn", "db.side8.io", "--version", "v1" ]
