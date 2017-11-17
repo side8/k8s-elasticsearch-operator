@@ -1,0 +1,89 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: side8-elasticsearch-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: side8-elasticsearch-operator
+subjects:
+  - kind: ServiceAccount
+    name: side8-elasticsearch-operator
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: side8-elasticsearch-operator
+rules:
+  - apiGroups:
+      - extensions
+    resources:
+      - thirdpartyresources
+    verbs:
+      - create
+  - apiGroups:
+      - db.side8.io
+    resources:
+      - elasticsearchs
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources:
+      - services
+    verbs: ["*"]
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: side8-elasticsearch-operator
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: side8-elasticsearch-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: side8-elasticsearch-operator
+    spec:
+      serviceAccountName: side8-elasticsearch-operator
+      containers:
+        - name: operator
+          image: side8/elasticsearch-operator:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 64Mi
+              cpu: 50m
+        - name: kubectl-proxy
+          image: side8/elasticsearch-operator:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - kubectl
+            - proxy
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 64Mi
+              cpu: 50m

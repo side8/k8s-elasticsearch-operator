@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -vxeo pipefail
+set -eo pipefail
 
 echo "START ========================" >&2
 
@@ -11,6 +11,7 @@ K8S_STATUS_DATA_REPLICAS=${K8S_STATUS_DATA_REPLICAS:=0}
 K8S_SPEC_MASTER_REPLICAS=${K8S_SPEC_MASTER_REPLICAS:=3}
 K8S_STATUS_MASTER_REPLICAS=${K8S_STATUS_MASTER_REPLICAS:=0}
 
+ES_URL="http://localhost:8001/api/v1/namespaces/${K8S_METADATA_NAMESPACE}/services/${K8S_METADATA_NAME}/proxy"
 
 if [[ ${K8S_STATUS_DATA_REPLICAS} > ${K8S_SPEC_DATA_REPLICAS} ]] ; then
     curl -fso/dev/null -XPUT -d '{"transient": {"cluster.routing.allocation.exclude._name": "'$(seq -f"${K8S_METADATA_NAME}-data-%g" -s, ${K8S_SPEC_DATA_REPLICAS} ${K8S_STATUS_DATA_REPLICAS})'"}}' ${ES_URL}/_cluster/settings
