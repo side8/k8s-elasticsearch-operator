@@ -10,7 +10,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: side8-elasticsearch-operator
-    namespace: default
+    namespace: operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -50,11 +50,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: side8-elasticsearch-operator
+  namespace: operator
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: side8-elasticsearch-operator
+  namespace: operator
 spec:
   replicas: 1
   template:
