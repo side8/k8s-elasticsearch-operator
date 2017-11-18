@@ -1,4 +1,0 @@
-kubernetes==3.0.0
-PyYAML==3.12
-six==1.11.0
-git+https://github.com/side8/k8s-operator
